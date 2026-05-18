@@ -3,9 +3,7 @@ using System.Linq;
 
 namespace MDMX_MaskCreator;
 
-/// <summary>
-/// A dicti
-/// </summary>
+
 public class FixtureLibrary
 {
     private readonly Dictionary<string, DmxFixture> _fixtures;
@@ -17,6 +15,8 @@ public class FixtureLibrary
     public DmxFixture? Get(string name) => _fixtures.TryGetValue(name, out var fixture) ? fixture : null;
     
     public bool Contains(string name) => _fixtures.ContainsKey(name);
+    
+    public int Count => _fixtures.Count;
     
     public static FixtureLibrary LoadFromCsv(string path) => new(DmxFixture.ParseFixtures(path));
     
