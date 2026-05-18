@@ -5,12 +5,32 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="MDMX_MaskCreator.MainWindow"
         Title="MDMX_MaskCreator">
-        <Panel>
-                <TextBlock>Welcome to Avalonia!</TextBlock>
-                <Button Click="Button_OnClick"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                        Load JSON
+        <Grid>
+                <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"></ColumnDefinition>
+                        <ColumnDefinition Width="200"></ColumnDefinition>
+                        <ColumnDefinition Width="300"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Button
+                        Grid.Column="0"
+                        Name="btnFixture"
+                        Click="Button_OnClick">
+                        Load Fixture CSV
                 </Button>
-        </Panel>
+                <Button
+                        Grid.Column="1"
+                        Name="btnPatch"
+                        Click="PatchButton_OnClick"
+                >
+                        Load Patch CSV
+                </Button>
+                <Button
+                        Grid.Column="2"
+                        Name="btnPatchThis"
+                        Click="BtnCreatePatch_OnClick"
+                >
+                        Load Patch and Fixtures
+                </Button>
+                <TextBlock Name="Status" Grid.Column="2">Log: </TextBlock>
+        </Grid>
 </Window>
