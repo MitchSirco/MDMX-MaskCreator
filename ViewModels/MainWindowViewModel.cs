@@ -22,6 +22,9 @@ public class MainWindowViewModel: ReactiveObject
     private string _statusText = "No patch loaded";
     private bool _canExport;
     
+    public string MaskedSummary => 
+        $"{AllFixtures().Count(f => f.IsSelected)} fixtures masked";
+    
     public ObservableCollection<UniverseGroupViewModel> Universes { get; } = new();
 
     public Bitmap? PreviewBitmap
@@ -61,7 +64,7 @@ public class MainWindowViewModel: ReactiveObject
     
     public MainWindowViewModel()
     {
-        var canLoadPatch = this.WhenAnyValue(x => x._library)
+        var canLoadPatch = this.WhenAnyValue(x => x.Library)
             .Select(lib => lib is not null);
 
         var canExport = this.WhenAnyValue(x => x.CanExport);
@@ -110,6 +113,8 @@ public class MainWindowViewModel: ReactiveObject
         var selected = AllFixtures().Where(f => f.IsSelected).Select(f => f.Fixture);
         var skBitmap = _renderer.Render(selected);
         PreviewBitmap = ConvertToAvaloniaBitmap(skBitmap);
+        this.RaisePropertyChanged(nameof(MaskedSummary));
+        UpdateStatus();
     }
 
     private void UpdateStatus()

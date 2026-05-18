@@ -1,36 +1,157 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:vm="using:MDMX_MaskCreator.ViewModels"
         x:Class="MDMX_MaskCreator.MainWindow"
-        Title="MDMX_MaskCreator">
-        <Grid>
-                <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="200"></ColumnDefinition>
-                        <ColumnDefinition Width="200"></ColumnDefinition>
-                        <ColumnDefinition Width="300"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-                <Button
-                        Grid.Column="0"
-                        Name="btnFixture"
-                        Click="Button_OnClick">
-                        Load Fixture CSV
-                </Button>
-                <Button
-                        Grid.Column="1"
-                        Name="btnPatch"
-                        Click="PatchButton_OnClick"
-                >
-                        Load Patch CSV
-                </Button>
-                <Button
-                        Grid.Column="2"
-                        Name="btnPatchThis"
-                        Click="BtnCreatePatch_OnClick"
-                >
-                        Load Patch and Fixtures
-                </Button>
-                <TextBlock Name="Status" Grid.Column="2">Log: </TextBlock>
+        x:DataType="vm:MainWindowViewModel"
+        Title="VRSL Mask Tool"
+        Width="1100" Height="620"
+        MinWidth="800" MinHeight="500">
+
+    <DockPanel>
+
+        <!-- toolbar -->
+        <Border DockPanel.Dock="Top"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="12,6">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Command="{Binding LoadFixturesCommand}"
+                        Content="Load fixtures" />
+                <Button Command="{Binding LoadPatchCommand}"
+                        Content="Load patch" />
+                <Separator Width="1" Margin="4,0" />
+                <Button Command="{Binding SavePresetCommand}"
+                        Content="Save preset" />
+                <Button Command="{Binding LoadPresetCommand}"
+                        Content="Load preset" />
+                <Separator Width="1" Margin="4,0" />
+                <Button Command="{Binding ExportMaskCommand}"
+                        Content="Export mask PNG"
+                        Classes="accent" />
+            </StackPanel>
+        </Border>
+
+        <!-- status bar -->
+        <Border DockPanel.Dock="Bottom"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="14,5">
+            <TextBlock Text="{Binding StatusText}"
+                       FontSize="12"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        </Border>
+
+        <!-- main content -->
+        <Grid ColumnDefinitions="260,1,*">
+
+            <!-- sidebar -->
+            <DockPanel Grid.Column="0">
+                <Border DockPanel.Dock="Top"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="12,8">
+                    <TextBlock Text="FIXTURE INSTANCES"
+                               FontSize="11"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                </Border>
+
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Universes}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:UniverseGroupViewModel">
+
+                                <!-- universe group -->
+                                <StackPanel>
+                                    <!-- universe header -->
+                                    <Button Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,6"
+                                            Command="{Binding ToggleExpandedCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding Label}"
+                                                       FontSize="11"
+                                                       FontWeight="Medium"
+                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                                            <TextBlock Text="{Binding FixtureCount, StringFormat='({0})'}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- fixture rows -->
+                                    <ItemsControl ItemsSource="{Binding Fixtures}"
+                                                  IsVisible="{Binding IsExpanded}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:PatchedFixtureViewModel">
+                                                <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                                        BorderThickness="0,0,0,0.5"
+                                                        Padding="24,4,12,4">
+                                                    <CheckBox IsChecked="{Binding IsSelected}"
+                                                              HorizontalAlignment="Stretch">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Name}"
+                                                                       FontSize="12" />
+                                                            <TextBlock Text="{Binding Meta}"
+                                                                       FontSize="11"
+                                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                                                        </StackPanel>
+                                                    </CheckBox>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+
+            <!-- divider -->
+            <Rectangle Grid.Column="1"
+                       Fill="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+
+            <!-- preview panel -->
+            <DockPanel Grid.Column="2">
+                <Border DockPanel.Dock="Top"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="14,8">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0"
+                                   Text="MASK PREVIEW"
+                                   FontSize="11"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                        <TextBlock Grid.Column="1"
+                                   Text="2560 × 208 px"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+                    </Grid>
+                </Border>
+
+                <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                        Padding="16">
+                    <StackPanel Spacing="10" VerticalAlignment="Center">
+
+                        <!-- the actual preview image -->
+                        <Image Source="{Binding PreviewBitmap}"
+                               Stretch="Uniform"
+                               MaxHeight="120"
+                               HorizontalAlignment="Stretch" />
+
+                        <!-- masked count -->
+                        <TextBlock Text="{Binding MaskedSummary}"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                    </StackPanel>
+                </Border>
+            </DockPanel>
+
         </Grid>
+    </DockPanel>
 </Window>

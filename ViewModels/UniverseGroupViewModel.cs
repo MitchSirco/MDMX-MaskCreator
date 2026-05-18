@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Reactive;
 using ReactiveUI;
 
 namespace MDMX_MaskCreator.ViewModels;
@@ -6,7 +7,9 @@ namespace MDMX_MaskCreator.ViewModels;
 public class UniverseGroupViewModel : ReactiveObject
 {
     private bool _isExpanded = true;
-    
+    public int FixtureCount => Fixtures.Count;
+    public ReactiveCommand<Unit, bool> ToggleExpandedCommand { get; }
+
     public int Universe { get; }
     public string Label => $"Universe {Universe}";
     public ObservableCollection<PatchedFixtureViewModel> Fixtures { get; } = new();
@@ -33,5 +36,7 @@ public class UniverseGroupViewModel : ReactiveObject
     public UniverseGroupViewModel(int universe)
     {
         Universe = universe;
+        ToggleExpandedCommand = ReactiveCommand.Create(() =>
+            IsExpanded = !IsExpanded);
     }
 }

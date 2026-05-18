@@ -1,5 +1,7 @@
 ﻿using Avalonia;
 using System;
+using Avalonia.ReactiveUI;
+
 
 namespace MDMX_MaskCreator;
 
@@ -16,9 +18,7 @@ class Program
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
-#if DEBUG
-            .WithDeveloperTools()
-#endif
             .WithInterFont()
-            .LogToTrace();
+            .LogToTrace()
+            .UseReactiveUI();
 }
