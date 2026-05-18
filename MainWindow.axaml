@@ -5,6 +5,12 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="MDMX_MaskCreator.MainWindow"
         Title="MDMX_MaskCreator">
-    Welcome to Avalonia!
-    
+        <Panel>
+                <TextBlock>Welcome to Avalonia!</TextBlock>
+                <Button Click="Button_OnClick"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                        Load JSON
+                </Button>
+        </Panel>
 </Window>
