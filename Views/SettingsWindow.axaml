@@ -60,6 +60,10 @@
                       Content="Export black as transparent" />
             <CheckBox IsChecked="{Binding FullColumnForcesWhiteCrc}"
                       Content="Full column forces white CRC" />
+            <TextBlock Text="If something breaks, blame MitchSirco lol"
+                       FontSize="11"
+                       FontWeight="Medium"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
         </StackPanel>
     </DockPanel>
 </Window>
