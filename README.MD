@@ -2,8 +2,16 @@
 A tool to programmatically create .png Masks for the MDMX Gridnode
 
 Features:
-* Yeah this creates the masks, all you gotta do is feed it the patch and fixtures csv and it will give you a selection for what stuff you want to mask out
+* Create masks using a patch and fixture csv
+* Manually create masks using the manual dmx patch
+* Export with gridnode only or in 16:9 aspect ratio
+* export with invert or transparent
+* enable / disable crc for full columns
 
-Written in C# .NET 9 with the Avalonia UI Framework as an attempt to make it Cross-Plattform
+## Tutorial
+todo, need to write the .csv spec (How the fixture and patch is structured so it can be read)
 
-For Transparency, this was written using the help of Claude Sonnet 4.6 (Helped with Structure and UI)
+## Tech
+Written in C# .NET 9 with the Avalonia UI Framework as an attempt to make it Cross-Plattform (only windows is tested so far)
+
+Also, for transparency, this was written using the help of Claude Sonnet 4.6 (Helped with Structure and UI)
