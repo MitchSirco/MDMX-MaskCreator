@@ -39,7 +39,7 @@ public class MainWindowViewModel: ReactiveObject
         get => _fixtureFilter;
         set
         {
-            this.RaiseAndSetIfChanged(ref _fixtureFilter, value);
+            this.RaiseAndSetIfChanged(ref _fixtureFilter, value ?? string.Empty);
             this.RaisePropertyChanged(nameof(FilteredUniverses));
         }
     }
@@ -49,7 +49,14 @@ public class MainWindowViewModel: ReactiveObject
         get
         {
             if (string.IsNullOrWhiteSpace(_fixtureFilter))
+            {
+                foreach (var universe in Universes)
+                {
+                    universe.SetFilter(string.Empty);
+                }
+
                 return Universes;
+            }
 
             var filter = _fixtureFilter.ToLower();
 
