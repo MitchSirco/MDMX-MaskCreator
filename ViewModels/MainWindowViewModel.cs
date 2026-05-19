@@ -129,11 +129,18 @@ public class MainWindowViewModel: ReactiveObject
         RefreshPreview();
     }
     
-    private void RefreshPreview()
+    private async void RefreshPreview()
     {
-        var selected = AllFixtures().Where(f => f.IsSelected).Select(f => f.Fixture);
-        var skBitmap = _renderer.Render(selected);
-        PreviewBitmap = ConvertToAvaloniaBitmap(skBitmap);
+        var selected = AllFixtures()
+            .Where(f => f.IsSelected)
+            .Select(f => f.Fixture)
+            .ToList();
+        var invertMask = _settings.InvertMask;
+
+        var bitmap = await Task.Run(() => _renderer.Render(selected, invertMask));
+
+        PreviewBitmap = ConvertToAvaloniaBitmap(bitmap);
+        bitmap.Dispose();
         this.RaisePropertyChanged(nameof(MaskedSummary));
         UpdateStatus();
     }
@@ -189,9 +196,9 @@ public class MainWindowViewModel: ReactiveObject
         var selected = AllFixtures().Where(f => f.IsSelected).Select(f => f.Fixture);
 
         if (_settings.SixteenNineExport)
-            _renderer.RenderAndSaveAs169(selected, path, _settings.GridWidth);
+            _renderer.RenderAndSaveAs169(selected, path, _settings.GridWidth, _settings.InvertMask);
         else
-            _renderer.RenderAndSave(selected, path);
+            _renderer.RenderAndSave(selected, path, _settings.InvertMask);
 
         _settings.LastExportPath = path;
         _settingsService.Save(_settings);

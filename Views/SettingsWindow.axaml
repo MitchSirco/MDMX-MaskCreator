@@ -4,7 +4,7 @@
         x:Class="MDMX_MaskCreator.Views.SettingsWindow"
         x:DataType="vm:SettingsWindowViewModel"
         Title="Settings"
-        Width="360" Height="240"
+        Width="360" Height="280"
         CanResize="false"
         WindowStartupLocation="CenterOwner">
     <DockPanel Margin="20">
@@ -54,6 +54,8 @@
                            Margin="24,0,0,0"
                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
             </StackPanel>
+            <CheckBox IsChecked="{Binding InvertMask}"
+                      Content="Invert mask (black = active, white = masked)" />
 
         </StackPanel>
     </DockPanel>
