@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -29,6 +30,45 @@ public partial class MainWindow : Window
             var settingsVm = (SettingsWindowViewModel)dialog.DataContext!;
             return settingsVm.ToSettings(current);
         };
+        
+        vm.ShowErrorDialog = async (title, message) =>
+        {
+            var dialog = new Window
+            {
+                Title = title,
+                Width = 420,
+                Height = 200,
+                CanResize = false,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Content = new StackPanel
+                {
+                    Margin = new Avalonia.Thickness(20),
+                    Spacing = 16,
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = message,
+                            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                            FontSize = 13
+                        },
+                        new Button
+                        {
+                            Content = "OK",
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right
+                        }
+                    }
+                }
+            };
+
+            // wire OK button to close
+            var okButton = ((StackPanel)dialog.Content).Children
+                .OfType<Button>().First();
+            okButton.Click += (_, _) => dialog.Close();
+
+            await dialog.ShowDialog(this);
+        };
+
 
         DataContext = vm;
     }

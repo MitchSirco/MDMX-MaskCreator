@@ -43,6 +43,10 @@ public class MainWindowViewModel: ReactiveObject
             this.RaisePropertyChanged(nameof(FilteredUniverses));
         }
     }
+    public Func<string, string, Task>? ShowErrorDialog { get; set; }
+
+    private Task ShowError(string title, string message)
+        => ShowErrorDialog?.Invoke(title, message) ?? Task.CompletedTask;
 
     public IEnumerable<UniverseGroupViewModel> FilteredUniverses
     {
@@ -231,8 +235,16 @@ public class MainWindowViewModel: ReactiveObject
         var path = await PickFileAsync("Load fixture library", "csv");
         if (path is null) return;
 
-        Library = FixtureLibrary.LoadFromCsv(path);
-        StatusText = $"Fixture library loaded · {Library.Count} definitions";
+        try
+        {
+            Library = FixtureLibrary.LoadFromCsv(path);
+            StatusText = $"Fixture library loaded · {Library.Count} definitions";
+        }
+        catch (Exception ex)
+        {
+            await ShowError("Failed to load fixture library",
+                $"The file could not be parsed as a fixture library.\n\n{ex.Message}");
+        }
     }
 
     private async Task LoadPatchAsync()
@@ -242,9 +254,17 @@ public class MainWindowViewModel: ReactiveObject
         var path = await PickFileAsync("Load patch", "csv");
         if (path is null) return;
 
-        var entries = PatchEntry.ParsePatch(path);
-        _patch = PatchedFixture.Resolve(entries, _library);
-        RebuildFixtureList(_patch);
+        try
+        {
+            var entries = PatchEntry.ParsePatch(path);
+            _patch = PatchedFixture.Resolve(entries, Library);
+            RebuildFixtureList(_patch);
+        }
+        catch (Exception ex)
+        {
+            await ShowError("Failed to load patch",
+                $"The file could not be parsed as a patch.\n\n{ex.Message}");
+        }
     }
 
     private async Task ExportMaskAsync()
