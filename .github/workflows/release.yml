@@ -32,16 +32,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-
-      - name: Publish
-        run: |
-          dotnet publish MDMX-MaskCreator.csproj \
-            --configuration Release \
-            --runtime ${{ matrix.rid }} \
-            --self-contained true \
-            --output ./publish/${{ matrix.rid }} \
-            -p:PublishSingleFile=true \
-            -p:IncludeNativeLibrariesForSelfExtract=true
           
       - name: Publish (Windows)
         if: matrix.os == 'windows-latest'
