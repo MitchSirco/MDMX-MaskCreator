@@ -3,6 +3,7 @@
         xmlns:vm="using:MDMX_MaskCreator.ViewModels"
         x:Class="MDMX_MaskCreator.MainWindow"
         x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/appicon.ico"
         Title="MDMX-MaskCreator"
         Width="1300" Height="720"
         MinWidth="900" MinHeight="500">

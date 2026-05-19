@@ -37,4 +37,12 @@
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
+
+    <PropertyGroup>
+        <ApplicationIcon>Assets\appicon.ico</ApplicationIcon>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**"/>
+    </ItemGroup>
 </Project>
