@@ -193,7 +193,8 @@ public class MainWindowViewModel: ReactiveObject
         var ranges = _parsedRanges.ToList();
         var invertMask = _settings.InvertMask;
 
-        var bitmap = await Task.Run(() => _renderer.Render(selected, ranges, invertMask));
+        var bitmap = await Task.Run(() => _renderer.Render(
+            selected, ranges, invertMask, _settings.FullColumnForcesWhiteCrc));
         PreviewBitmap = ConvertToAvaloniaBitmap(bitmap);
         bitmap.Dispose();
         

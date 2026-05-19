@@ -23,7 +23,11 @@ public class MaskRenderer
     }
 
     
-    public SKBitmap Render(IEnumerable<PatchedFixture> fixturesToMask, IEnumerable<DmxRange> dmxRanges, bool invertMask = false)
+    public SKBitmap Render(
+        IEnumerable<PatchedFixture> fixturesToMask, 
+        IEnumerable<DmxRange> dmxRanges, 
+        bool invertMask = false,
+        bool fullColumnForcesWhiteCrc = true)
     {
         // L8 - 8-bit grayscale
         SKBitmap bitmap  = new SKBitmap(_gridWidth, GridHeight, SKColorType.Gray8, SKAlphaType.Opaque); 
@@ -86,8 +90,19 @@ public class MaskRenderer
             
             // read back bytes and compute CRC
             var bytes = ReadColumnBytes(bitmap, column);
-            var crc = CrcCalculator.Compute(bytes);
-            DrawCrc(canvas, blackPaint, whitePaint, column, crc);
+            
+            if (fullColumnForcesWhiteCrc && IsColumnFullyActive(bytes))
+            {
+                // all slots active — force entire parity region white
+                canvas.DrawRect(x, yStart, GridLayout.ColumnWidth,
+                    GridLayout.ParityBits * GridLayout.BitSize, whitePaint);
+            }
+            else
+            {
+                // partial column — use true CRC value
+                var crc = CrcCalculator.Compute(bytes);
+                DrawCrc(canvas, blackPaint, whitePaint, column, crc);
+            }
         }
         
         // This is slow, i bet there is a better way to do this
@@ -112,6 +127,10 @@ public class MaskRenderer
         return bitmap;
     }
 
+    private static bool IsColumnFullyActive(byte[] bytes)
+        => bytes.All(b => b == 255);
+
+    
     public SKBitmap Render(IEnumerable<PatchedFixture> fixturesToMask, bool invertMask = false)
         => Render(fixturesToMask, [], invertMask);
     

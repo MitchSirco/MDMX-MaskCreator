@@ -11,6 +11,13 @@ public class SettingsWindowViewModel : ReactiveObject
     private bool _sixteenNineExport;
     private bool _invertMask;
     private bool _exportBlackAsTransparent;
+    private bool _fullColumnForcesWhiteCrc;
+
+    public bool FullColumnForcesWhiteCrc
+    {
+        get => _fullColumnForcesWhiteCrc;
+        set => this.RaiseAndSetIfChanged(ref _fullColumnForcesWhiteCrc, value);
+    }
 
     public bool ExportBlackAsTransparent
     {
@@ -41,6 +48,7 @@ public class SettingsWindowViewModel : ReactiveObject
         _sixteenNineExport = settings.SixteenNineExport;
         _invertMask = settings.InvertMask;
         _exportBlackAsTransparent = settings.ExportBlackAsTransparent;
+        _fullColumnForcesWhiteCrc = settings.FullColumnForcesWhiteCrc;
 
         this.WhenAnyValue(x => x.GridWidth)
             .Do(_ => this.RaisePropertyChanged(nameof(ExportSizeLabel)))
@@ -59,7 +67,8 @@ public class SettingsWindowViewModel : ReactiveObject
         GridWidth = GridWidth,
         SixteenNineExport = SixteenNineExport,
         InvertMask = InvertMask,
-        ExportBlackAsTransparent = ExportBlackAsTransparent,
+        ExportBlackAsTransparent = ExportBlackAsTransparent,    
+        FullColumnForcesWhiteCrc = FullColumnForcesWhiteCrc,
         LastExportPath = existing.LastExportPath
     };
     

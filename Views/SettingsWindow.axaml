@@ -4,7 +4,7 @@
         x:Class="MDMX_MaskCreator.Views.SettingsWindow"
         x:DataType="vm:SettingsWindowViewModel"
         Title="Settings"
-        Width="400" Height="320"
+        Width="400" Height="360"
         CanResize="false"
         WindowStartupLocation="CenterOwner">
     <DockPanel Margin="20">
@@ -55,9 +55,11 @@
                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
             </StackPanel>
             <CheckBox IsChecked="{Binding InvertMask}"
-                      Content="Invert mask (black = active, white = masked)" />
+                      Content="Invert mask" />
             <CheckBox IsChecked="{Binding ExportBlackAsTransparent}"
                       Content="Export black as transparent" />
+            <CheckBox IsChecked="{Binding FullColumnForcesWhiteCrc}"
+                      Content="Full column forces white CRC" />
         </StackPanel>
     </DockPanel>
 </Window>
