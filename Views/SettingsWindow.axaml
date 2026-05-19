@@ -59,7 +59,7 @@
             <CheckBox IsChecked="{Binding ExportBlackAsTransparent}"
                       Content="Export black as transparent" />
             <CheckBox IsChecked="{Binding FullColumnForcesWhiteCrc}"
-                      Content="Full column forces white CRC" />
+                      Content="Full/Partially filled Column forces white CRC" />
             <TextBlock Text="If something breaks, blame MitchSirco lol"
                        FontSize="11"
                        FontWeight="Medium"

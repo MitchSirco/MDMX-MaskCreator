@@ -91,7 +91,7 @@ public class MaskRenderer
             // read back bytes and compute CRC
             var bytes = ReadColumnBytes(bitmap, column);
             
-            if (fullColumnForcesWhiteCrc && IsColumnFullyActive(bytes))
+            if (fullColumnForcesWhiteCrc)
             {
                 // all slots active — force entire parity region white
                 canvas.DrawRect(x, yStart, GridLayout.ColumnWidth,
