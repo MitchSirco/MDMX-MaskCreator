@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Avalonia.Media.Imaging;
+using CsvHelper.Configuration.Attributes;
 using MDMX_MaskCreator.Services;
 using SkiaSharp;
 
@@ -106,21 +107,24 @@ public class MaskRenderer
         }
         
         // This is slow, i bet there is a better way to do this
-        if (!invertMask)
+        if (invertMask)
         {
-            for (int y = 0; y < bitmap.Height; y++)
+            var invertedBitmap =
+                new SKBitmap(bitmap.Width, bitmap.Height, SKColorType.Rgba8888, SKAlphaType.Opaque);
+            using var canvass = new SKCanvas(invertedBitmap);
+            using var paint = new SKPaint
             {
-                for (int x = 0; x < bitmap.Width; x++)
-                {
-                    var pixel = bitmap.GetPixel(x, y);
-                    bitmap.SetPixel(x, y, new SKColor(
-                        (byte)(255 - pixel.Red),
-                        (byte)(255 - pixel.Green),
-                        (byte)(255 - pixel.Blue),
-                        255
-                    ));
-                }
-            }
+                ColorFilter = SKColorFilter.CreateBlendMode(
+                    SKColors.White, 
+                    SKBlendMode.Difference)
+            };
+            canvass.DrawBitmap(bitmap, 0, 0, paint);
+            canvass.Flush();
+            
+            var testPixel = invertedBitmap.GetPixel(0, 0);
+            Console.WriteLine($"Inverted pixel at 0,0: R={testPixel.Red}");
+            bitmap.Dispose();
+            return invertedBitmap;
         }
         
         
