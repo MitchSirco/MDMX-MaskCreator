@@ -28,7 +28,55 @@ public class MainWindowViewModel: ReactiveObject
     public bool CanOpenExportFolder =>
         _settings.LastExportPath is not null &&
         Directory.Exists(Path.GetDirectoryName(_settings.LastExportPath));
+    
+    private string _dmxRangeInput = string.Empty;
+    private List<DmxRange> _parsedRanges = new();
 
+    private string _fixtureFilter = string.Empty;
+
+    public string FixtureFilter
+    {
+        get => _fixtureFilter;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _fixtureFilter, value);
+            this.RaisePropertyChanged(nameof(FilteredUniverses));
+        }
+    }
+
+    public IEnumerable<UniverseGroupViewModel> FilteredUniverses
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_fixtureFilter))
+                return Universes;
+
+            var filter = _fixtureFilter.ToLower();
+
+            foreach (var universe in Universes)
+            {
+                universe.SetFilter(filter);
+            }
+
+            return Universes.Where(u => u.FilteredFixtures.Any());
+        }
+    }
+
+    
+    public string DmxRangeInput
+    {
+        get => _dmxRangeInput;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _dmxRangeInput, value);
+            _parsedRanges = DmxRangeParser.Parse(value);
+            RefreshPreview();
+        }
+    }
+    
+    public string DmxRangeError => _dmxRangeInput.Length > 0 && _parsedRanges.Count == 0
+        ? "No valid ranges found"
+        : string.Empty;
     
     public string MaskedSummary => 
         $"{AllFixtures().Count(f => f.IsSelected)} fixtures masked";
@@ -135,13 +183,16 @@ public class MainWindowViewModel: ReactiveObject
             .Where(f => f.IsSelected)
             .Select(f => f.Fixture)
             .ToList();
+        var ranges = _parsedRanges.ToList();
         var invertMask = _settings.InvertMask;
 
-        var bitmap = await Task.Run(() => _renderer.Render(selected, invertMask));
-
+        var bitmap = await Task.Run(() => _renderer.Render(selected, ranges, invertMask));
         PreviewBitmap = ConvertToAvaloniaBitmap(bitmap);
         bitmap.Dispose();
+        
         this.RaisePropertyChanged(nameof(MaskedSummary));
+        this.RaisePropertyChanged(nameof(DmxRangeError));
+
         UpdateStatus();
     }
 
@@ -194,12 +245,12 @@ public class MainWindowViewModel: ReactiveObject
         if (path is null) return;
 
         var selected = AllFixtures().Where(f => f.IsSelected).Select(f => f.Fixture);
+        var ranges = _parsedRanges.ToList();
 
         if (_settings.SixteenNineExport)
-            _renderer.RenderAndSaveAs169(selected, path, _settings.GridWidth, 
-                _settings.InvertMask, _settings.ExportBlackAsTransparent);
+            _renderer.RenderAndSaveAs169(selected, ranges, path, _settings.GridWidth, _settings.InvertMask, _settings.ExportBlackAsTransparent);
         else
-            _renderer.RenderAndSave(selected, path, 
+            _renderer.RenderAndSave(selected, ranges, path,
                 _settings.InvertMask, _settings.ExportBlackAsTransparent);
 
         _settings.LastExportPath = path;

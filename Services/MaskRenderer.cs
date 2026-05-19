@@ -23,7 +23,7 @@ public class MaskRenderer
     }
 
     
-    public SKBitmap Render(IEnumerable<PatchedFixture> fixturesToMask, bool invertMask = false)
+    public SKBitmap Render(IEnumerable<PatchedFixture> fixturesToMask, IEnumerable<DmxRange> dmxRanges, bool invertMask = false)
     {
         // L8 - 8-bit grayscale
         SKBitmap bitmap  = new SKBitmap(_gridWidth, GridHeight, SKColorType.Gray8, SKAlphaType.Opaque); 
@@ -31,8 +31,9 @@ public class MaskRenderer
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.Black); // always start black
         
-        using var paint = new SKPaint { Color = SKColors.White }; // selected = white
-
+        using var whitePaint = new SKPaint { Color = SKColors.White };
+        using var blackPaint = new SKPaint { Color = SKColors.Black };
+        
         var touchedColumns = new HashSet<int>();
         
         foreach (var fixture in fixturesToMask)
@@ -44,16 +45,28 @@ public class MaskRenderer
                 if (rect.Right > _gridWidth)
                     continue; // slot falls outside grid bounds, skip silently
                 
-                canvas.DrawRect(rect, paint);
+                canvas.DrawRect(rect, whitePaint);
                 touchedColumns.Add(column);
 
             }
         }
         
-        canvas.Flush();
+        // draw DMX range selections
+        foreach (var range in dmxRanges)
+        {
+            foreach (var address in range.Expand())
+            {
+                var absoluteSlot = GridLayout.ToAbsoluteSlot(address.Universe, address.Channel);
+                var (column, slot) = GridLayout.ToColumnSlot(absoluteSlot);
+                var rect = GridLayout.ToPixelRect(column, slot);
+                if (rect.Right > _gridWidth) continue;
+                canvas.DrawRect(rect, whitePaint);
+                touchedColumns.Add(column);
+            }
+        }
         
-        using var blackPaint = new SKPaint { Color = SKColors.Black };
-        using var whitePaint = new SKPaint { Color = SKColors.White };
+        
+        canvas.Flush();
 
         
         // recompute CRC for every touched column
@@ -99,6 +112,9 @@ public class MaskRenderer
         return bitmap;
     }
 
+    public SKBitmap Render(IEnumerable<PatchedFixture> fixturesToMask, bool invertMask = false)
+        => Render(fixturesToMask, [], invertMask);
+    
     private static byte[] ReadColumnBytes(SKBitmap bitmap, int column)
     {
         var bytes = new byte[6];
@@ -172,11 +188,12 @@ public class MaskRenderer
 
     public void RenderAndSave(
         IEnumerable<PatchedFixture> fixturesToMask,
+        IEnumerable<DmxRange> dmxRanges,
         string path,
         bool invertMask = false,
         bool blackAsTransparent = false)
     {
-        using var bitmap = Render(fixturesToMask, invertMask);
+        using var bitmap = Render(fixturesToMask, dmxRanges, invertMask);
         if (blackAsTransparent)
         {
             using var transparent = MakeBlackTransparent(bitmap);
@@ -188,18 +205,18 @@ public class MaskRenderer
     
     public void RenderAndSaveAs169(
         IEnumerable<PatchedFixture> fixturesToMask,
+        IEnumerable<DmxRange> dmxRanges,
         string path,
         int gridWidth,
         bool invertMask = false,
         bool blackAsTransparent = false)
     {
         var height169 = gridWidth * 9 / 16;
-
         using var fullBitmap = new SKBitmap(gridWidth, height169, SKColorType.Rgba8888, SKAlphaType.Opaque);
         using var fullCanvas = new SKCanvas(fullBitmap);
         fullCanvas.Clear(SKColors.Black);
 
-        using var maskBitmap = Render(fixturesToMask, invertMask);
+        using var maskBitmap = Render(fixturesToMask, dmxRanges, invertMask);
         fullCanvas.DrawBitmap(maskBitmap, 0, 0);
 
         if (blackAsTransparent)

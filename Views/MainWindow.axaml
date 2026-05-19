@@ -3,7 +3,7 @@
         xmlns:vm="using:MDMX_MaskCreator.ViewModels"
         x:Class="MDMX_MaskCreator.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="VRSL Mask Tool"
+        Title="MDMX-MaskCreator"
         Width="1100" Height="620"
         MinWidth="800" MinHeight="500">
 
@@ -60,6 +60,33 @@
                                FontWeight="Medium"
                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
                 </Border>
+                
+                <!-- fixture name filter -->
+                <Border DockPanel.Dock="Top"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="8">
+                    <TextBox Text="{Binding FixtureFilter}"
+                             Watermark="Filter by fixture name..."
+                             FontSize="12" />
+                </Border>
+
+                <!-- DMX range input -->
+                <Border DockPanel.Dock="Top"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="8">
+                    <StackPanel Spacing="4">
+                        <TextBox Text="{Binding DmxRangeInput}"
+                                 Watermark="e.g. U1:C1-C50, U1:C1-U2:C23"
+                                 FontSize="12" />
+                        <TextBlock Text="{Binding DmxRangeError}"
+                                   FontSize="11"
+                                   Foreground="Red"
+                                   IsVisible="{Binding DmxRangeError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                </Border>
+                
 
                 <ScrollViewer>
                     <ItemsControl ItemsSource="{Binding Universes}">
@@ -69,24 +96,44 @@
                                 <!-- universe group -->
                                 <StackPanel>
                                     <!-- universe header -->
-                                    <Button Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-                                            HorizontalAlignment="Stretch"
-                                            HorizontalContentAlignment="Left"
-                                            Padding="12,6"
-                                            Command="{Binding ToggleExpandedCommand}">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <TextBlock Text="{Binding Label}"
-                                                       FontSize="11"
-                                                       FontWeight="Medium"
-                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                                            <TextBlock Text="{Binding FixtureCount, StringFormat='({0})'}"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
-                                        </StackPanel>
-                                    </Button>
+                                        <Grid ColumnDefinitions="*,Auto,Auto">
+                                            <!-- expand toggle — only on the label area -->
+                                            <Button Grid.Column="0"
+                                                    Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                                    HorizontalAlignment="Stretch"
+                                                    HorizontalContentAlignment="Left"
+                                                    Padding="12,6"
+                                                    Command="{Binding ToggleExpandedCommand}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding Label}"
+                                                               FontSize="11"
+                                                               FontWeight="Medium"
+                                                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                                                    <TextBlock Text="{Binding FixtureCount, StringFormat='({0})'}"
+                                                               FontSize="11"
+                                                               Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!-- All/None as siblings, not children -->
+                                            <Button Grid.Column="1"
+                                                    Content="All"
+                                                    FontSize="11"
+                                                    Padding="6,2"
+                                                    VerticalAlignment="Center"
+                                                    Command="{Binding SelectAllCommand}" />
+                                            <Button Grid.Column="2"
+                                                    Content="None"
+                                                    FontSize="11"
+                                                    Padding="6,2"
+                                                    Margin="4,0,8,0"
+                                                    VerticalAlignment="Center"
+                                                    Command="{Binding DeselectAllCommand}" />
+                                        </Grid>
+                                    
 
                                     <!-- fixture rows -->
-                                    <ItemsControl ItemsSource="{Binding Fixtures}"
+                                    <ItemsControl ItemsSource="{Binding FilteredFixtures}"
                                                   IsVisible="{Binding IsExpanded}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:PatchedFixtureViewModel">

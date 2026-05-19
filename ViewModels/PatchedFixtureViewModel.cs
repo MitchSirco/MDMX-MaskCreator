@@ -11,9 +11,11 @@ public class PatchedFixtureViewModel : ReactiveObject
     public int Universe => Fixture.Patch.Universe;
     public int Channel => Fixture.Patch.Channel;
     public int ChannelCount => Fixture.Definition.Channels;
+    
+    
  
     // display string for the sidebar: "ch 19 · LR 1"
-    public string Meta => $"ch {Channel} · {Location}";
+    public string Meta => $"ch {Channel} · {ChannelCount}ch · {Location}";
     
     public bool IsSelected
     {

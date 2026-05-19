@@ -4,7 +4,7 @@
         x:Class="MDMX_MaskCreator.Views.SettingsWindow"
         x:DataType="vm:SettingsWindowViewModel"
         Title="Settings"
-        Width="360" Height="280"
+        Width="400" Height="320"
         CanResize="false"
         WindowStartupLocation="CenterOwner">
     <DockPanel Margin="20">
