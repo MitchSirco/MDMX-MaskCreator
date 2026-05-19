@@ -36,8 +36,7 @@ public class MaskRenderer
             foreach (var (column, slot) in slots)
             {
                 var rect = GridLayout.ToPixelRect(column, slot);
-                
-                if (rect.Left + rect.Right > _gridWidth)
+                if (rect.Right > _gridWidth)
                     continue; // slot falls outside grid bounds, skip silently
                 
                 canvas.DrawRect(rect, paint);
