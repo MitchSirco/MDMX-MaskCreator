@@ -35,13 +35,22 @@ jobs:
 
       - name: Publish
         run: |
-          dotnet publish MDMX-MaskCreator/MDMX-MaskCreator.csproj \
+          dotnet publish MDMX-MaskCreator.csproj \
             --configuration Release \
             --runtime ${{ matrix.rid }} \
             --self-contained true \
             --output ./publish/${{ matrix.rid }} \
             -p:PublishSingleFile=true \
             -p:IncludeNativeLibrariesForSelfExtract=true
+          
+      - name: Publish (Windows)
+        if: matrix.os == 'windows-latest'
+        run: dotnet publish MDMX-MaskCreator.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output ./publish/${{ matrix.rid }} -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+        shell: pwsh
+
+      - name: Publish (Unix)
+        if: matrix.os != 'windows-latest'
+        run: dotnet publish MDMX-MaskCreator.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output ./publish/${{ matrix.rid }} -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 
       - name: Zip (Windows)
         if: matrix.os == 'windows-latest'

@@ -1,12 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <OutputType>WinExe</OutputType>
+        <OutputType>Exe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 		<StartupObject>MDMX_MaskCreator.Program</StartupObject>
     </PropertyGroup>
+	
+	<PropertyGroup>
+		<IsTestProject>false</IsTestProject>
+	</PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="11.2.3" />
