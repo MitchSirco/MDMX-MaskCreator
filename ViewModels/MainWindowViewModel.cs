@@ -196,9 +196,11 @@ public class MainWindowViewModel: ReactiveObject
         var selected = AllFixtures().Where(f => f.IsSelected).Select(f => f.Fixture);
 
         if (_settings.SixteenNineExport)
-            _renderer.RenderAndSaveAs169(selected, path, _settings.GridWidth, _settings.InvertMask);
+            _renderer.RenderAndSaveAs169(selected, path, _settings.GridWidth, 
+                _settings.InvertMask, _settings.ExportBlackAsTransparent);
         else
-            _renderer.RenderAndSave(selected, path, _settings.InvertMask);
+            _renderer.RenderAndSave(selected, path, 
+                _settings.InvertMask, _settings.ExportBlackAsTransparent);
 
         _settings.LastExportPath = path;
         _settingsService.Save(_settings);

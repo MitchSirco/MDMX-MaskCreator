@@ -56,7 +56,8 @@
             </StackPanel>
             <CheckBox IsChecked="{Binding InvertMask}"
                       Content="Invert mask (black = active, white = masked)" />
-
+            <CheckBox IsChecked="{Binding ExportBlackAsTransparent}"
+                      Content="Export black as transparent" />
         </StackPanel>
     </DockPanel>
 </Window>

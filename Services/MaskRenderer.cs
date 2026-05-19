@@ -77,6 +77,7 @@ public class MaskRenderer
             DrawCrc(canvas, blackPaint, whitePaint, column, crc);
         }
         
+        // This is slow, i bet there is a better way to do this
         if (!invertMask)
         {
             for (int y = 0; y < bitmap.Height; y++)
@@ -123,6 +124,22 @@ public class MaskRenderer
         return bytes;
     }
     
+    private static SKBitmap MakeBlackTransparent(SKBitmap bitmap)
+    {
+        var result = new SKBitmap(bitmap.Width, bitmap.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+
+        for (int y = 0; y < bitmap.Height; y++)
+        for (int x = 0; x < bitmap.Width; x++)
+        {
+            var pixel = bitmap.GetPixel(x, y);
+            result.SetPixel(x, y, pixel.Red == 0
+                ? SKColors.Transparent
+                : pixel);
+        }
+
+        return result;
+    }
+    
     private static void DrawCrc(
         SKCanvas canvas,
         SKPaint blackPaint,
@@ -156,17 +173,25 @@ public class MaskRenderer
     public void RenderAndSave(
         IEnumerable<PatchedFixture> fixturesToMask,
         string path,
-        bool invertMask = false)
+        bool invertMask = false,
+        bool blackAsTransparent = false)
     {
         using var bitmap = Render(fixturesToMask, invertMask);
-        SaveAsPng(bitmap, path);
+        if (blackAsTransparent)
+        {
+            using var transparent = MakeBlackTransparent(bitmap);
+            SaveAsPng(transparent, path);
+        }
+        else
+            SaveAsPng(bitmap, path);
     }
     
     public void RenderAndSaveAs169(
         IEnumerable<PatchedFixture> fixturesToMask,
         string path,
         int gridWidth,
-        bool invertMask = false)
+        bool invertMask = false,
+        bool blackAsTransparent = false)
     {
         var height169 = gridWidth * 9 / 16;
 
@@ -177,10 +202,13 @@ public class MaskRenderer
         using var maskBitmap = Render(fixturesToMask, invertMask);
         fullCanvas.DrawBitmap(maskBitmap, 0, 0);
 
-        using var image = SKImage.FromBitmap(fullBitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-        using var stream = File.OpenWrite(path);
-        data.SaveTo(stream);
+        if (blackAsTransparent)
+        {
+            using var transparent = MakeBlackTransparent(fullBitmap);
+            SaveAsPng(transparent, path);
+        }
+        else
+            SaveAsPng(fullBitmap, path);
     }
 
 
