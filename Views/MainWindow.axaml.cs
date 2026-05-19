@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using MDMX_MaskCreator.ViewModels;
+using MDMX_MaskCreator.Views;
 
 namespace MDMX_MaskCreator;
 
@@ -17,6 +18,17 @@ public partial class MainWindow : Window
             pickFile: (title, ext) => PickFileAsync(title, ext),
             saveFile: (title, ext) => SaveFileAsync(title, ext)
         );
+
+        vm.ShowSettingsDialog = async (current) =>
+        {
+            var dialog = new SettingsWindow(current);
+            await dialog.ShowDialog(this);
+
+            if (!dialog.Saved) return null;
+
+            var settingsVm = (SettingsWindowViewModel)dialog.DataContext!;
+            return settingsVm.ToSettings(current);
+        };
 
         DataContext = vm;
     }

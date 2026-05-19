@@ -58,5 +58,27 @@ public class MaskRenderer
         using var bitmap = Render(fixturesToMask);
         SaveAsPng(bitmap, path);
     }
+    
+    public void RenderAndSaveAs169(
+        IEnumerable<PatchedFixture> fixturesToMask,
+        string path,
+        int gridWidth)
+    {
+        var height169 = gridWidth * 9 / 16;
+
+        using var fullBitmap = new SKBitmap(gridWidth, height169, SKColorType.Rgba8888, SKAlphaType.Opaque);
+        using var fullCanvas = new SKCanvas(fullBitmap);
+        fullCanvas.Clear(SKColors.Black);
+
+        // render the mask and draw it at the top
+        using var maskBitmap = Render(fixturesToMask);
+        fullCanvas.DrawBitmap(maskBitmap, 0, 0);
+
+        using var image = SKImage.FromBitmap(fullBitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var stream = File.OpenWrite(path);
+        data.SaveTo(stream);
+    }
+
 
 }

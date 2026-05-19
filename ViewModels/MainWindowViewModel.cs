@@ -8,6 +8,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using MDMX_MaskCreator.Grid;
+using MDMX_MaskCreator.Services;
 using ReactiveUI;
 using SkiaSharp;
 
@@ -15,12 +16,19 @@ namespace MDMX_MaskCreator.ViewModels;
 
 public class MainWindowViewModel: ReactiveObject
 {
-    private readonly MaskRenderer _renderer = new();
+    private MaskRenderer _renderer;
     private readonly PresetService _presetService = new();
+    private readonly SettingsService _settingsService = new();
+    private AppSettings _settings;
 
     private Bitmap? _previewBitmap;
     private string _statusText = "No patch loaded";
     private bool _canExport;
+    
+    public bool CanOpenExportFolder =>
+        _settings.LastExportPath is not null &&
+        Directory.Exists(Path.GetDirectoryName(_settings.LastExportPath));
+
     
     public string MaskedSummary => 
         $"{AllFixtures().Count(f => f.IsSelected)} fixtures masked";
@@ -51,6 +59,11 @@ public class MainWindowViewModel: ReactiveObject
     public ReactiveCommand<Unit, Unit> ExportMaskCommand { get; }
     public ReactiveCommand<Unit, Unit> SavePresetCommand { get; }
     public ReactiveCommand<Unit, Unit> LoadPresetCommand { get; }
+    public ReactiveCommand<Unit, Unit> OpenSettingsCommand { get; }
+    public ReactiveCommand<Unit, Unit> OpenExportFolderCommand { get; }
+    
+    public Func<AppSettings, Task<AppSettings?>>? ShowSettingsDialog { get; set; }
+
     
     // internal state
     private FixtureLibrary? _library;
@@ -69,11 +82,19 @@ public class MainWindowViewModel: ReactiveObject
 
         var canExport = this.WhenAnyValue(x => x.CanExport);
 
+        _settings = _settingsService.Load();
+        _renderer = new MaskRenderer(_settings.GridWidth);
+
+        var canOpenFolder = this.WhenAnyValue(x => x.CanOpenExportFolder);
+
         LoadFixturesCommand = ReactiveCommand.CreateFromTask(LoadFixturesAsync);
         LoadPatchCommand = ReactiveCommand.CreateFromTask(LoadPatchAsync, canLoadPatch);
         ExportMaskCommand = ReactiveCommand.CreateFromTask(ExportMaskAsync, canExport);
         SavePresetCommand = ReactiveCommand.CreateFromTask(SavePresetAsync, canExport);
         LoadPresetCommand = ReactiveCommand.CreateFromTask(LoadPresetAsync, canExport);
+        OpenSettingsCommand = ReactiveCommand.CreateFromTask(OpenSettingsAsync);
+        OpenExportFolderCommand = ReactiveCommand.Create(OpenExportFolder, canOpenFolder);
+        
     }
     
     private void RebuildFixtureList(List<PatchedFixture> patched)
@@ -166,8 +187,17 @@ public class MainWindowViewModel: ReactiveObject
         if (path is null) return;
 
         var selected = AllFixtures().Where(f => f.IsSelected).Select(f => f.Fixture);
-        _renderer.RenderAndSave(selected, path);
+
+        if (_settings.SixteenNineExport)
+            _renderer.RenderAndSaveAs169(selected, path, _settings.GridWidth);
+        else
+            _renderer.RenderAndSave(selected, path);
+
+        _settings.LastExportPath = path;
+        _settingsService.Save(_settings);
+        this.RaisePropertyChanged(nameof(CanOpenExportFolder));
     }
+
 
     private async Task SavePresetAsync()
     {
@@ -189,6 +219,35 @@ public class MainWindowViewModel: ReactiveObject
 
         UpdateStatus();
     }
+    
+    private async Task OpenSettingsAsync()
+    {
+        if (ShowSettingsDialog is null) return;
+
+        var updated = await ShowSettingsDialog(_settings);
+        if (updated is null) return;
+
+        _settings = updated;
+        _settingsService.Save(_settings);
+        _renderer = new MaskRenderer(_settings.GridWidth);
+        RefreshPreview();
+        this.RaisePropertyChanged(nameof(CanOpenExportFolder));
+    }
+
+    private void OpenExportFolder()
+    {
+        var folder = Path.GetDirectoryName(_settings.LastExportPath);
+        if (folder is null) return;
+
+        // cross-platform folder open
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = folder,
+            UseShellExecute = true
+        };
+        System.Diagnostics.Process.Start(psi);
+    }
+
 
     // --- file picker helpers ---
     // these need a reference to the Avalonia StorageProvider

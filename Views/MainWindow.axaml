@@ -28,6 +28,11 @@
                 <Button Command="{Binding ExportMaskCommand}"
                         Content="Export mask PNG"
                         Classes="accent" />
+                <Separator Width="1" Margin="4,0" />
+                <Button Command="{Binding OpenExportFolderCommand}"
+                        Content="Open export folder" />
+                <Button Command="{Binding OpenSettingsCommand}"
+                        Content="Settings" />
             </StackPanel>
         </Border>
 
