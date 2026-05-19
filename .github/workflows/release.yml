@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            artifact: MDMX-MaskCreator-windows
+          - os: macos-latest
+            rid: osx-x64
+            artifact: MDMX-MaskCreator-macos
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact: MDMX-MaskCreator-linux
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Publish
+        run: |
+          dotnet publish MDMX-MaskCreator/MDMX-MaskCreator.csproj \
+            --configuration Release \
+            --runtime ${{ matrix.rid }} \
+            --self-contained true \
+            --output ./publish/${{ matrix.rid }} \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true
+
+      - name: Zip (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          Compress-Archive -Path ./publish/${{ matrix.rid }}/* -DestinationPath ./${{ matrix.artifact }}.zip
+        shell: pwsh
+
+      - name: Bundle .app (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir -p MDMX-MaskCreator.app/Contents/MacOS
+          mkdir -p MDMX-MaskCreator.app/Contents/Resources
+          cp ./publish/${{ matrix.rid }}/MDMX-MaskCreator MDMX-MaskCreator.app/Contents/MacOS/
+          chmod +x MDMX-MaskCreator.app/Contents/MacOS/MDMX-MaskCreator
+
+          cat > MDMX-MaskCreator.app/Contents/Info.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>MDMX-MaskCreator</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.mdmx.maskcreator</string>
+            <key>CFBundleName</key>
+            <string>MDMX-MaskCreator</string>
+            <key>CFBundleVersion</key>
+            <string>${{ github.event.inputs.tag }}</string>
+            <key>CFBundleShortVersionString</key>
+            <string>${{ github.event.inputs.tag }}</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+
+          zip -r ./${{ matrix.artifact }}.zip MDMX-MaskCreator.app
+
+      - name: Zip (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          chmod +x ./publish/${{ matrix.rid }}/MDMX-MaskCreator
+          zip -r ./${{ matrix.artifact }}.zip ./publish/${{ matrix.rid }}/MDMX-MaskCreator
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ./${{ matrix.artifact }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.event.inputs.tag }}
+          tag_name: ${{ github.event.inputs.tag }}
+          draft: false
+          prerelease: false
+          files: |
+            MDMX-MaskCreator-windows/MDMX-MaskCreator-windows.zip
+            MDMX-MaskCreator-macos/MDMX-MaskCreator-macos.zip
+            MDMX-MaskCreator-linux/MDMX-MaskCreator-linux.zip
+          body: |
+            ## MDMX Mask Creator ${{ github.event.inputs.tag }}
+            
+            ### Downloads
+            | Platform | File |
+            |---|---|
+            | Windows | `MDMX-MaskCreator-windows.zip` |
+            | macOS | `MDMX-MaskCreator-macos.zip` |
+            | Linux | `MDMX-MaskCreator-linux.zip` |
