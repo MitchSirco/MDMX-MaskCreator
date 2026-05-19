@@ -4,8 +4,8 @@
         x:Class="MDMX_MaskCreator.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="MDMX-MaskCreator"
-        Width="1100" Height="620"
-        MinWidth="800" MinHeight="500">
+        Width="1300" Height="720"
+        MinWidth="900" MinHeight="500">
 
     <DockPanel>
 
@@ -14,26 +14,44 @@
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="12,6">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Command="{Binding LoadFixturesCommand}"
-                        Content="Load fixtures" />
-                <Button Command="{Binding LoadPatchCommand}"
-                        Content="Load patch" />
-                <Separator Width="1" Margin="4,0" />
-                <Button Command="{Binding SavePresetCommand}"
-                        Content="Save preset" />
-                <Button Command="{Binding LoadPresetCommand}"
-                        Content="Load preset" />
-                <Separator Width="1" Margin="4,0" />
-                <Button Command="{Binding ExportMaskCommand}"
-                        Content="Export mask PNG"
-                        Classes="accent" />
-                <Separator Width="1" Margin="4,0" />
-                <Button Command="{Binding OpenExportFolderCommand}"
-                        Content="Open export folder" />
-                <Button Command="{Binding OpenSettingsCommand}"
-                        Content="Settings" />
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel
+                    Orientation="Horizontal" Spacing="8">
+                    <Button Command="{Binding LoadFixturesCommand}"
+                            Content="Load fixtures"
+                            ToolTip.Tip="Load Fixtures CSV first"
+                            />
+                    <Button Command="{Binding LoadPatchCommand}"
+                            ToolTip.Tip="Then the CSV patch"
+                            Content="Load patch" />
+                    <Separator Width="1" Margin="4,0" />
+                    <Button Command="{Binding SavePresetCommand}"
+                            Content="Save preset" />
+                    <Button Command="{Binding LoadPresetCommand}"
+                            Content="Load preset" />
+                </StackPanel>
+                
+                <StackPanel
+                    Grid.Column="2"
+                    Orientation="Horizontal" Spacing="8">
+                    <Button Command="{Binding ExportMaskCommand}"
+                            Content="Export mask PNG"
+                            Classes="accent" />
+                    <Button Command="{Binding OpenExportFolderCommand}"
+                            Content="Open export folder" />
+                    <Separator Width="1" Margin="4,0" />
+                    <Button Command="{Binding OpenSettingsCommand}"
+                            Content="Settings" />
+                </StackPanel>
+
+            </Grid>
         </Border>
 
         <!-- status bar -->
@@ -79,7 +97,9 @@
                     <StackPanel Spacing="4">
                         <TextBox Text="{Binding DmxRangeInput}"
                                  Watermark="e.g. U1:C1-C50, U1:C1-U2:C23"
-                                 FontSize="12" />
+                                 FontSize="12"
+                                 ToolTip.Tip="Create masks directly using the Universe and Channel Numbers"
+                                 />
                         <TextBlock Text="{Binding DmxRangeError}"
                                    FontSize="11"
                                    Foreground="Red"
@@ -89,7 +109,7 @@
                 
 
                 <ScrollViewer>
-                    <ItemsControl ItemsSource="{Binding Universes}">
+                    <ItemsControl ItemsSource="{Binding FilteredUniverses}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:UniverseGroupViewModel">
 
