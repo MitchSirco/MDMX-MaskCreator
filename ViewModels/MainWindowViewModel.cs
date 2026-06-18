@@ -24,6 +24,7 @@ public class MainWindowViewModel: ReactiveObject
     private Bitmap? _previewBitmap;
     private string _statusText = "No patch loaded";
     private bool _canExport;
+    private string _presetText = "";
     
     public bool CanOpenExportFolder =>
         _settings.LastExportPath is not null &&
@@ -104,6 +105,12 @@ public class MainWindowViewModel: ReactiveObject
     {
         get => _statusText;
         private set => this.RaiseAndSetIfChanged(ref _statusText, value);
+    }
+    
+    public string PresetText
+    {
+        get => _presetText;
+        private set => this.RaiseAndSetIfChanged(ref _presetText, value);
     }
 
     public bool CanExport
@@ -276,7 +283,9 @@ public class MainWindowViewModel: ReactiveObject
         var ranges = _parsedRanges.ToList();
 
         if (_settings.SixteenNineExport)
-            _renderer.RenderAndSaveAs169(selected, ranges, path, _settings.GridWidth, _settings.InvertMask, _settings.ExportBlackAsTransparent);
+            _renderer.RenderAndSaveAs169(selected, ranges, path, _settings.GridWidth,
+                _settings.InvertMask, _settings.ExportBlackAsTransparent, 
+                _settings.WhitePadding, _settings.FullColumnForcesWhiteCrc);
         else
             _renderer.RenderAndSave(selected, ranges, path,
                 _settings.InvertMask, _settings.ExportBlackAsTransparent);
@@ -299,13 +308,22 @@ public class MainWindowViewModel: ReactiveObject
     {
         var path = await PickFileAsync("Load preset", "json");
         if (path is null) return;
+        
+        try
+        {
+            var selected = _presetService.Load(path);
 
-        var selected = _presetService.Load(path);
-
-        foreach (var fixture in AllFixtures())
-            fixture.IsSelected = selected.Contains((fixture.Universe, fixture.Channel));
-
-        UpdateStatus();
+            foreach (var fixture in AllFixtures())
+                fixture.IsSelected = selected.Contains((fixture.Universe, fixture.Channel));
+            
+            PresetText = "Loaded: "+ Path.GetFileName(path);
+            UpdateStatus();
+        }
+        catch (Exception ex)
+        {
+            await ShowError("Failed to load preset",
+                $"The file could not be parsed as a preset.\n\n{ex.Message}");
+        }
     }
     
     private async Task OpenSettingsAsync()

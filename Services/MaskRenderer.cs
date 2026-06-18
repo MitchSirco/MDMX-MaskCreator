@@ -232,15 +232,20 @@ public class MaskRenderer
         string path,
         int gridWidth,
         bool invertMask = false,
-        bool blackAsTransparent = false)
+        bool blackAsTransparent = false,
+        bool whitePadding = false,
+        bool fullColumnForcesWhiteCrc = true)
     {
         var height169 = gridWidth * 9 / 16;
         using var fullBitmap = new SKBitmap(gridWidth, height169, SKColorType.Rgba8888, SKAlphaType.Opaque);
         using var fullCanvas = new SKCanvas(fullBitmap);
-        fullCanvas.Clear(SKColors.Black);
+        
+        fullCanvas.Clear(whitePadding ? SKColors.White : SKColors.Black);
 
-        using var maskBitmap = Render(fixturesToMask, dmxRanges, invertMask);
+        using var maskBitmap = Render(fixturesToMask, dmxRanges, invertMask, fullColumnForcesWhiteCrc);
         fullCanvas.DrawBitmap(maskBitmap, 0, 0);
+
+        fullCanvas.Flush();
 
         if (blackAsTransparent)
         {
@@ -248,7 +253,9 @@ public class MaskRenderer
             SaveAsPng(transparent, path);
         }
         else
+        {
             SaveAsPng(fullBitmap, path);
+        }
     }
 
 

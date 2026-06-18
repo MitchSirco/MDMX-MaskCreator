@@ -4,7 +4,7 @@
         x:Class="MDMX_MaskCreator.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/appicon.ico"
-        Title="MDMX-MaskCreator - V1.0.3"
+        Title="MDMX-MaskCreator - V1.0.4"
         Width="1300" Height="720"
         MinWidth="900" MinHeight="500">
 
@@ -24,7 +24,8 @@
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel
-                    Orientation="Horizontal" Spacing="8">
+                    Orientation="Horizontal" Spacing="8"
+                    >
                     <Button Command="{Binding LoadFixturesCommand}"
                             Content="Load fixtures"
                             ToolTip.Tip="Load Fixtures CSV first"
@@ -37,6 +38,7 @@
                             Content="Save preset" />
                     <Button Command="{Binding LoadPresetCommand}"
                             Content="Load preset" />
+
                 </StackPanel>
                 
                 <StackPanel
@@ -60,9 +62,18 @@
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="14,5">
-            <TextBlock Text="{Binding StatusText}"
-                       FontSize="12"
-                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+            <StackPanel
+                Orientation="Horizontal"
+                >
+                <TextBlock Text="{Binding StatusText}"
+                           FontSize="12"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                <Separator Width="5" Margin="4,0" />
+                <TextBlock Text="{Binding PresetText}" 
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+            </StackPanel>
         </Border>
 
         <!-- main content -->

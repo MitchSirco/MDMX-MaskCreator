@@ -8,4 +8,5 @@ public class AppSettings
     public string? LastExportPath { get; set; }
     public bool ExportBlackAsTransparent { get; set; } = false;
     public bool FullColumnForcesWhiteCrc { get; set; } = true;
+    public bool WhitePadding { get; set; } = false;
 }
