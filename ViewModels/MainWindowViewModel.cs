@@ -21,11 +21,19 @@ public class MainWindowViewModel: ReactiveObject
     private readonly SettingsService _settingsService = new();
     private AppSettings _settings;
 
+    public string TogglePreviewModeLabel => CurrentPreviewMode == PreviewMode.Mask
+        ? "Show patch layout"
+        : "Show mask preview";
+    
     private Bitmap? _previewBitmap;
     private string _statusText = "No patch loaded";
     private bool _canExport;
     private string _presetText = "";
     
+    public enum PreviewMode { Mask, PatchLayout }
+    private PreviewMode _previewMode = PreviewMode.Mask;
+
+
     public bool CanOpenExportFolder =>
         _settings.LastExportPath is not null &&
         Directory.Exists(Path.GetDirectoryName(_settings.LastExportPath));
@@ -118,7 +126,15 @@ public class MainWindowViewModel: ReactiveObject
         get => _canExport;
         private set => this.RaiseAndSetIfChanged(ref _canExport, value);
     }
-
+    public PreviewMode CurrentPreviewMode
+    {
+        get => _previewMode;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _previewMode, value);
+            RefreshPreview();
+        }
+    }
     // commands — wired up in constructor
     public ReactiveCommand<Unit, Unit> LoadFixturesCommand { get; }
     public ReactiveCommand<Unit, Unit> LoadPatchCommand { get; }
@@ -127,6 +143,7 @@ public class MainWindowViewModel: ReactiveObject
     public ReactiveCommand<Unit, Unit> LoadPresetCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenSettingsCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenExportFolderCommand { get; }
+    public ReactiveCommand<Unit, Unit> TogglePreviewModeCommand { get; }
     
     public Func<AppSettings, Task<AppSettings?>>? ShowSettingsDialog { get; set; }
 
@@ -160,6 +177,10 @@ public class MainWindowViewModel: ReactiveObject
         LoadPresetCommand = ReactiveCommand.CreateFromTask(LoadPresetAsync, canExport);
         OpenSettingsCommand = ReactiveCommand.CreateFromTask(OpenSettingsAsync);
         OpenExportFolderCommand = ReactiveCommand.Create(OpenExportFolder, canOpenFolder);
+        TogglePreviewModeCommand = ReactiveCommand.Create(() =>
+        {
+            CurrentPreviewMode = CurrentPreviewMode == PreviewMode.Mask ? PreviewMode.PatchLayout : PreviewMode.Mask;
+        });
         
     }
     
@@ -197,20 +218,31 @@ public class MainWindowViewModel: ReactiveObject
     
     private async void RefreshPreview()
     {
-        var selected = AllFixtures()
-            .Where(f => f.IsSelected)
-            .Select(f => f.Fixture)
-            .ToList();
-        var ranges = _parsedRanges.ToList();
-        var invertMask = _settings.InvertMask;
+        
+        SKBitmap skBitmap;
 
-        var bitmap = await Task.Run(() => _renderer.Render(
-            selected, ranges, invertMask, _settings.FullColumnForcesWhiteCrc));
-        PreviewBitmap = ConvertToAvaloniaBitmap(bitmap);
-        bitmap.Dispose();
+        if (CurrentPreviewMode == PreviewMode.PatchLayout)
+        {
+            var allFixtures = AllFixtures().Select(f => f.Fixture).ToList();
+            skBitmap = await Task.Run(() => _renderer.RenderColorCoded(allFixtures, 12));
+        }
+        else
+        {
+            var selected = AllFixtures().Where(f => f.IsSelected).Select(f => f.Fixture).ToList();
+            var ranges = _parsedRanges.ToList();
+            var invertMask = _settings.InvertMask;
+            var fullColumnForcesWhiteCrc = _settings.FullColumnForcesWhiteCrc;
+
+            skBitmap = await Task.Run(() => 
+                _renderer.Render(selected, ranges, invertMask, fullColumnForcesWhiteCrc));
+        }
+        
+        PreviewBitmap = ConvertToAvaloniaBitmap(skBitmap);
+        skBitmap.Dispose();
         
         this.RaisePropertyChanged(nameof(MaskedSummary));
         this.RaisePropertyChanged(nameof(DmxRangeError));
+        this.RaisePropertyChanged(nameof(TogglePreviewModeLabel));
 
         UpdateStatus();
     }
