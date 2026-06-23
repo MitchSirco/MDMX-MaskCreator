@@ -204,7 +204,7 @@
                         BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                         BorderThickness="0,0,0,1"
                         Padding="14,8">
-                    <Grid ColumnDefinitions="*,Auto, Auto, Auto"
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto"
                           VerticalAlignment="Center">
                         <TextBlock Grid.Column="0"
                                    VerticalAlignment="Center"
@@ -219,7 +219,6 @@
                                 Padding="6,3"
                                 Command="{Binding TogglePreviewModeCommand}" />
                         <Separator Grid.Column="2" Width="1" Margin="4,0" />
-                        
                         <TextBlock Grid.Column="3"
                                    VerticalAlignment="Center"
                                    Text="2560 × 208 px"
@@ -228,25 +227,70 @@
                     </Grid>
                 </Border>
 
-                <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-                        Padding="16">
-                    <StackPanel Spacing="10" VerticalAlignment="Center">
+                <!-- main content area: preview + legend side by side -->
+                <Grid ColumnDefinitions="*,Auto">
 
-                        <!-- the actual preview image -->
-                        <Image Source="{Binding PreviewBitmap}"
-                               Stretch="Uniform"
-                               MaxHeight="120"
-                               HorizontalAlignment="Stretch" />
+                    <!-- preview -->
+                    <Border Grid.Column="0"
+                            Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                            Padding="16">
+                        <StackPanel Spacing="10" VerticalAlignment="Center">
+                            <StackPanel HorizontalAlignment="Center">
+                                <Grid>
+                                    <Image Source="{Binding PreviewBitmap}"
+                                           Stretch="Uniform"
+                                           x:Name="PreviewImage" />
+                                    <Grid x:Name="LabelGrid" /> <!-- no fixed height, overlays image -->
+                                </Grid>
+                                <Grid x:Name="TextLabelGrid" Height="0" /> <!-- separate grid for text labels -->
+                            </StackPanel>
+                            <TextBlock Text="{Binding MaskedSummary}"
+                                       FontSize="12"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                        </StackPanel>
+                    </Border>
 
-                        <!-- masked count -->
-                        <TextBlock Text="{Binding MaskedSummary}"
-                                   FontSize="12"
-                                   HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                    </StackPanel>
-                </Border>
+                    <!-- legend sidebar -->
+                    <Border Grid.Column="1"
+                            IsVisible="{Binding ShowLegend}"
+                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                            BorderThickness="1,0,0,0"
+                            Width="160"
+                            Padding="8">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top"
+                                       Text="LEGEND"
+                                       FontSize="11"
+                                       FontWeight="Medium"
+                                       Margin="0,0,0,8"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                            <ScrollViewer>
+                                <ItemsControl ItemsSource="{Binding LegendItems}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:LegendItem">
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="6"
+                                                        Margin="0,3">
+                                                <Border Width="14"
+                                                        Height="14"
+                                                        CornerRadius="2"
+                                                        Background="{Binding Color,
+                                                            Converter={StaticResource ColorToBrushConverter}}" />
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontSize="11"
+                                                           VerticalAlignment="Center"
+                                                           TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+
+                </Grid>
             </DockPanel>
-
         </Grid>
     </DockPanel>
 </Window>

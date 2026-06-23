@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -14,23 +15,50 @@ using SkiaSharp;
 
 namespace MDMX_MaskCreator.ViewModels;
 
+public record LegendItem(string Name, SKColor Color);
+public record FixtureRunLabel(string Name, double XFraction, double WidthFraction, double PixelWidth);
 public class MainWindowViewModel: ReactiveObject
 {
+    
+    public string LabelColumnDefinitions =>
+        string.Join(",", CurrentLabels.Select(l => $"{l.WidthFraction}*"));
+    
     private MaskRenderer _renderer;
     private readonly PresetService _presetService = new();
     private readonly SettingsService _settingsService = new();
     private AppSettings _settings;
+    public int GridWidth => _settings.GridWidth;
 
-    public string TogglePreviewModeLabel => CurrentPreviewMode == PreviewMode.Mask
-        ? "Show patch layout"
-        : "Show mask preview";
+    public string TogglePreviewModeLabel => CurrentPreviewMode switch
+    {
+        PreviewMode.Mask => "Show patch layout", 
+        PreviewMode.PatchLayoutLabeled => "Show mask preview",
+        _ => "Toggle view"
+    };
     
     private Bitmap? _previewBitmap;
     private string _statusText = "No patch loaded";
     private bool _canExport;
     private string _presetText = "";
     
-    public enum PreviewMode { Mask, PatchLayout }
+
+    private List<LegendItem> _legendItems = [];
+    public List<LegendItem> LegendItems
+    {
+        get => _legendItems;
+        private set => this.RaiseAndSetIfChanged(ref _legendItems, value);
+    }
+
+    public bool ShowLegend => CurrentPreviewMode is 
+        PreviewMode.PatchLayoutLabeled;
+    
+    private List<FixtureRunLabel> _currentLabels = [];
+
+    public List<FixtureRunLabel> CurrentLabels
+    {
+        get => _currentLabels;
+        private set => this.RaiseAndSetIfChanged(ref _currentLabels, value);
+    }    public enum PreviewMode { Mask, PatchLayoutLabeled }
     private PreviewMode _previewMode = PreviewMode.Mask;
 
 
@@ -169,7 +197,7 @@ public class MainWindowViewModel: ReactiveObject
         _renderer = new MaskRenderer(_settings.GridWidth);
 
         var canOpenFolder = this.WhenAnyValue(x => x.CanOpenExportFolder);
-
+        
         LoadFixturesCommand = ReactiveCommand.CreateFromTask(LoadFixturesAsync);
         LoadPatchCommand = ReactiveCommand.CreateFromTask(LoadPatchAsync, canLoadPatch);
         ExportMaskCommand = ReactiveCommand.CreateFromTask(ExportMaskAsync, canExport);
@@ -179,7 +207,12 @@ public class MainWindowViewModel: ReactiveObject
         OpenExportFolderCommand = ReactiveCommand.Create(OpenExportFolder, canOpenFolder);
         TogglePreviewModeCommand = ReactiveCommand.Create(() =>
         {
-            CurrentPreviewMode = CurrentPreviewMode == PreviewMode.Mask ? PreviewMode.PatchLayout : PreviewMode.Mask;
+            CurrentPreviewMode = CurrentPreviewMode switch
+            {
+                PreviewMode.Mask => PreviewMode.PatchLayoutLabeled,
+                PreviewMode.PatchLayoutLabeled => PreviewMode.Mask,
+                _ => PreviewMode.Mask
+            };
         });
         
     }
@@ -220,14 +253,39 @@ public class MainWindowViewModel: ReactiveObject
     {
         
         SKBitmap skBitmap;
-
-        if (CurrentPreviewMode == PreviewMode.PatchLayout)
+        
+        if (CurrentPreviewMode == PreviewMode.PatchLayoutLabeled)
         {
             var allFixtures = AllFixtures().Select(f => f.Fixture).ToList();
-            skBitmap = await Task.Run(() => _renderer.RenderColorCoded(allFixtures, 12));
-        }
+            var selected = AllFixtures().Where(f => f.IsSelected).Select(f => f.Fixture).ToList();
+
+            var orderedByGridPosition = allFixtures
+                .OrderBy(f => GridLayout.ToAbsoluteSlot(f.Universe, f.StartChannel))
+                .ToList();
+            
+            var runs = FixtureColorAssigner.FindContiguousRuns(allFixtures);
+            CurrentLabels = runs.Select(r => new FixtureRunLabel(
+                r.FixtureName,
+                XFraction: (r.StartColumn * GridLayout.ColumnWidth) / (double)_settings.GridWidth,
+                WidthFraction: ((r.EndColumn - r.StartColumn + 1) * GridLayout.ColumnWidth) / (double)_settings.GridWidth,
+                PixelWidth: (r.EndColumn - r.StartColumn + 1) * GridLayout.ColumnWidth
+            )).ToList();
+
+            var colorMap = FixtureColorAssigner.AssignColors(
+                orderedByGridPosition.Select(f => f.Name));
+
+            LegendItems = colorMap.Select(kvp => new LegendItem(kvp.Key, kvp.Value))
+                .ToList();
+
+            this.RaisePropertyChanged(nameof(ShowLegend));
+            
+            skBitmap = await Task.Run(() =>
+                _renderer.RenderPatchLayoutOverlay(
+                    allFixtures, selected, _parsedRanges,
+                    _settings.InvertMask, _settings.FullColumnForcesWhiteCrc));        }
         else
         {
+            CurrentLabels = [];
             var selected = AllFixtures().Where(f => f.IsSelected).Select(f => f.Fixture).ToList();
             var ranges = _parsedRanges.ToList();
             var invertMask = _settings.InvertMask;
@@ -235,6 +293,9 @@ public class MainWindowViewModel: ReactiveObject
 
             skBitmap = await Task.Run(() => 
                 _renderer.Render(selected, ranges, invertMask, fullColumnForcesWhiteCrc));
+            // in the mask branch of RefreshPreview
+            LegendItems = [];
+            this.RaisePropertyChanged(nameof(ShowLegend));
         }
         
         PreviewBitmap = ConvertToAvaloniaBitmap(skBitmap);
@@ -243,6 +304,7 @@ public class MainWindowViewModel: ReactiveObject
         this.RaisePropertyChanged(nameof(MaskedSummary));
         this.RaisePropertyChanged(nameof(DmxRangeError));
         this.RaisePropertyChanged(nameof(TogglePreviewModeLabel));
+        this.RaisePropertyChanged(nameof(CurrentLabels));
 
         UpdateStatus();
     }
@@ -407,6 +469,5 @@ public class MainWindowViewModel: ReactiveObject
 
     private Task<string?> SaveFileAsync(string title, string extension)
         => _saveFile?.Invoke(title, extension) ?? Task.FromResult<string?>(null);
-    
     
 }

@@ -9,6 +9,9 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+#if DEBUG
+        this.AttachDeveloperTools(); // note: different method name
+#endif
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -17,7 +20,7 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow();
         }
-
+        
         base.OnFrameworkInitializationCompleted();
     }
 }

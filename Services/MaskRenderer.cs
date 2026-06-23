@@ -22,34 +22,6 @@ public class MaskRenderer
     {
         _gridWidth = gridWidth;
     }
-
-    public SKBitmap RenderColorCoded(IEnumerable<PatchedFixture> allFixtures, int seed = 0)
-    {
-        var bitmap = new SKBitmap(_gridWidth, GridHeight, SKColorType.Rgba8888, SKAlphaType.Opaque);
-        using var canvas = new SKCanvas(bitmap);
-        canvas.Clear(new SKColor(30, 30, 30)); // dark neutral background
-
-        var fixtureList = allFixtures.ToList();
-        var colorMap = FixtureColorAssigner.AssignColors(
-            fixtureList.Select(f => f.Name), seed);
-
-        foreach (var fixture in fixtureList)
-        {
-            var color = colorMap[fixture.Name];
-            using var paint = new SKPaint { Color = color };
-
-            var slots = GridLayout.ResolveSlots(fixture);
-            foreach (var (column, slot) in slots)
-            {
-                var rect = GridLayout.ToPixelRect(column, slot);
-                if (rect.Right > _gridWidth) continue;
-                canvas.DrawRect(rect, paint);
-            }
-        }
-
-        return bitmap;
-
-    }    
     
     public SKBitmap Render(
         IEnumerable<PatchedFixture> fixturesToMask, 
@@ -283,6 +255,51 @@ public class MaskRenderer
         {
             SaveAsPng(fullBitmap, path);
         }
+    }
+    
+    public SKBitmap RenderPatchLayoutOverlay(
+        List<PatchedFixture> allFixtures,
+        List<PatchedFixture> selectedFixtures,
+        List<DmxRange> dmxRanges,
+        bool invertMask = false,
+        bool fullColumnForcesWhiteCrc = true,
+        int seed = 0)
+    {
+        var bitmap = new SKBitmap(_gridWidth, GridHeight, SKColorType.Rgba8888, SKAlphaType.Opaque);
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.Black);
+
+        var colorMap = FixtureColorAssigner.AssignColors(allFixtures.Select(f => f.Name), seed);
+
+        foreach (var fixture in allFixtures)
+        {
+            var color = colorMap[fixture.Name];
+            using var paint = new SKPaint { Color = color };
+            var slots = GridLayout.ResolveSlots(fixture);
+            foreach (var (column, slot) in slots)
+            {
+                var rect = GridLayout.ToPixelRect(column, slot);
+                if (rect.Right > _gridWidth) continue;
+                canvas.DrawRect(rect, paint);
+            }
+        }
+
+// overlay mask
+        using var maskBitmap = Render(selectedFixtures, dmxRanges, invertMask, fullColumnForcesWhiteCrc);
+
+        SKBlendMode blendMode = invertMask ? SKBlendMode.Multiply : SKBlendMode.Screen;
+        SKColor overlayColor = invertMask
+            ? new SKColor(0, 0, 0, 230)
+            : new SKColor(255, 255, 255, 180);
+
+        using var overlayPaint = new SKPaint
+        {
+            Color = overlayColor,
+            BlendMode = blendMode
+        };
+        canvas.DrawBitmap(maskBitmap, 0, 0, overlayPaint);
+
+        return bitmap;
     }
 
 
