@@ -268,6 +268,7 @@ public class MaskRenderer
         var bitmap = new SKBitmap(_gridWidth, GridHeight, SKColorType.Rgba8888, SKAlphaType.Opaque);
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.Black);
+        
 
         var colorMap = FixtureColorAssigner.AssignColors(allFixtures.Select(f => f.Name), seed);
 
@@ -299,6 +300,39 @@ public class MaskRenderer
         };
         canvas.DrawBitmap(maskBitmap, 0, 0, overlayPaint);
 
+        // draw universe boundary markers
+        using var linePaint = new SKPaint
+        {
+            Color = new SKColor(255, 255, 255, 120),
+            StrokeWidth = 1,
+            IsStroke = true
+        };
+        using var textPaint = new SKPaint
+        {
+            Color = new SKColor(255, 255, 255, 230),
+            BlendMode = SKBlendMode.Difference,
+            TextSize = 18,
+            IsAntialias = true
+        };
+
+// figure out how many universes fit in the grid
+        int maxUniverses = (_gridWidth / GridLayout.ColumnWidth * GridLayout.SlotsPerColumn) / 512 + 2;
+
+        for (int u = 1; u <= maxUniverses; u++)
+        {
+            int absoluteSlot = (u - 1) * 512;
+            int column = absoluteSlot / GridLayout.SlotsPerColumn;
+            int x = column * GridLayout.ColumnWidth;
+
+            if (x >= _gridWidth) break;
+
+            // vertical line
+            canvas.DrawLine(x, 0, x, GridHeight, linePaint);
+
+            // label at top
+            canvas.DrawText($"U{u}", x + 4, 20, textPaint);
+        }
+        
         return bitmap;
     }
 
