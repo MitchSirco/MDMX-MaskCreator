@@ -78,7 +78,8 @@ jobs:
           </dict>
           </plist>
           EOF
-
+          
+          codesign --force --deep --sign - MDMX-MaskCreator.app
           zip -r ./${{ matrix.artifact }}.zip MDMX-MaskCreator.app
 
       - name: Zip (Linux)

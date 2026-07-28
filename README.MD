@@ -10,7 +10,7 @@ Features:
 
 
 ## Tech
-Written in C# .NET 9 with the Avalonia UI Framework as an attempt to make it Cross-Plattform (only windows is tested so far)
+Written in C# .NET 8 with the Avalonia UI Framework as an attempt to make it Cross-Platform
 
 Also, for transparency, this was written using the help of Claude Sonnet 4.6 (Helped with Structure and UI)
 
@@ -50,7 +50,11 @@ Download the latest [Releases](../../releases):
 | macOS | `MDMX-MaskCreator-macos.zip` |
 | Linux | `MDMX-MaskCreator-linux.zip` |
 
-Note: only windows is tested so far, lmk if other OS's work for this.
+
+**macOS note:** The app is unsigned because no dev acc from apple. If you see "damaged and cannot be opened",
+run `xattr -cr MDMX-MaskCreator.app` in Terminal, then right-click -> Open.
+
+Note: Linux is untested, lmk if it works
 
 ### Building from source
 
