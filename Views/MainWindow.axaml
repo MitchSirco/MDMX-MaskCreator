@@ -4,7 +4,7 @@
         x:Class="MDMX_MaskCreator.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/appicon.ico"
-        Title="MDMX-MaskCreator - V1.1.0"
+        Title="MDMX-MaskCreator - V1.2.0"
         Width="1300" Height="720"
         MinWidth="900" MinHeight="500">
 

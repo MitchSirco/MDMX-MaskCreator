@@ -54,7 +54,7 @@ Note: only windows is tested so far, lmk if other OS's work for this.
 
 ### Building from source
 
-Requires [.NET 9 SDK](https://dotnet.microsoft.com/download).
+Requires [.NET 8 SDK](https://dotnet.microsoft.com/download).
 
 ```bash
 git clone https://github.com/MitchSirco/MDMX-MaskCreator
